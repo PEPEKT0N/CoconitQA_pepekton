@@ -8,12 +8,15 @@ from api.api_manager import ApiManager
 from entities.user import User
 from resources.user_creds import SuperAdminCreds
 from constants.roles import Roles
-from model.TestUser import TestUser
+from model.TestUser import TestUser, RegisterUserResponse
+from sqlalchemy.orm import Session
+from db_requester.db_client import get_db_session
+from db_requester.db_helpers import DBHelper
 
 faker = Faker()
 
 @pytest.fixture(scope="function")
-def test_user():
+def test_user() -> TestUser:
     """
         Генерация случайного пользователя для тестов.
     """
@@ -24,11 +27,11 @@ def test_user():
         fullName=DataGenerator.generate_random_name(),
         password=random_password,
         passwordRepeat=random_password,
-        roles=[Roles.USER.value]
+        roles=[Roles.USER]
     )
 
 @pytest.fixture(scope="function")
-def registered_user(requester, test_user):
+def registered_user(requester, test_user: TestUser):
     """
         Фикстура для регистрации и получения данных зарегистрированного пользователя.
     """
@@ -38,23 +41,23 @@ def registered_user(requester, test_user):
         data=test_user,
         expected_status=201
     )
-    response_data = response.json()
-    registered_user = test_user.copy()
-    registered_user["id"] = response_data["id"]
-    yield registered_user
+    register_user_response = RegisterUserResponse(**response.json())
+    yield test_user, register_user_response
 
 @pytest.fixture(scope="function")
 def login_data_user(registered_user):
+    test_user, _ = registered_user
     return {
-        "email": registered_user["email"],
-        "password": registered_user["password"]
+        "email": test_user.email,
+        "password": test_user.password
     }
 
 @pytest.fixture(scope="function")
 def auth_with_wrong_password(registered_user):
+    reg_data, _ = registered_user
     return {
-        "email": registered_user["email"],
-        "password": f"!{registered_user["password"]}"
+        "email": reg_data.email,
+        "password": f"!{reg_data.password}"
     }
 
 @pytest.fixture(scope="function")
@@ -131,8 +134,8 @@ def common_user(user_session, super_admin, creation_user_data):
     new_session = user_session()
 
     common_user = User(
-        creation_user_data['email'],
-        creation_user_data['password'],
+        creation_user_data.email,
+        creation_user_data.password,
         list(Roles.USER.value),
         new_session
     )
@@ -150,5 +153,46 @@ def registration_user_data():
         fullName = DataGenerator.generate_random_name(),
         password = random_password,
         passwordRepeat = random_password,
-        roles = [Roles.USER.value]
+        roles = [Roles.USER]
     )
+
+@pytest.fixture(scope="module")
+def db_session() -> Session:
+    """
+    Фикстура, которая создает и возвращает сессию для работы с базой данных
+    После завершения теста сессия автоматически закрывается
+    """
+    db_session = get_db_session()
+    yield db_session
+    db_session.close()
+
+@pytest.fixture(scope="function")
+def db_helper(db_session) -> DBHelper:
+    """
+    Фикстура для экземпляра хелпера
+    """
+    db_helper = DBHelper(db_session)
+    return db_helper
+
+@pytest.fixture(scope="function")
+def created_test_user(db_helper):
+    """
+    Фикстура, которая создает тестового пользователя в БД
+    и удаляет его после завершения теста
+    """
+    user = db_helper.create_test_user(DataGenerator.generate_user_data())
+    yield user
+    # Cleanup после теста
+    if db_helper.get_user_by_id(user.id):
+        db_helper.delete_user(user)
+
+@pytest.fixture(scope="function")
+def created_test_movie(db_helper):
+    """
+    Фикстура, которая создает тестовый фильм в БД
+    и удаляет его после завершения теста
+    """
+    movie = db_helper.create_test_movie(DataGenerator.generate_movie_data())
+    yield movie
+    if db_helper.get_movie_by_name(movie.name):
+        db_helper.delete_movie(movie)

@@ -25,7 +25,7 @@ class AuthAPI(CustomRequester):
         )
 
 
-    def login_user(self, login_data, expected_status=200):
+    def login_user(self, login_data, expected_status=201):
         """
         Авторизация пользователя.
         :param login_data: Данные для логина.
@@ -43,6 +43,7 @@ class AuthAPI(CustomRequester):
             "email": user_creds[0],
             "password": user_creds[1]
         }
+        response = self.login_user(login_data, expected_status=201).json()
 
         response = self.login_user(login_data).json()
         if "accessToken" not in response:
