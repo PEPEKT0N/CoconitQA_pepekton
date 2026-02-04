@@ -196,3 +196,7 @@ def created_test_movie(db_helper):
     yield movie
     if db_helper.get_movie_by_name(movie.name):
         db_helper.delete_movie(movie)
+
+@pytest.fixture(scope="function")
+def review_movie():
+    return DataGenerator.generate_random_description()

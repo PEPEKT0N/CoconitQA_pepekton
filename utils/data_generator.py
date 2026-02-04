@@ -4,7 +4,8 @@ from faker import Faker
 faker = Faker()
 import datetime
 from constants.roles import Roles
-from datetime import datetime, timedelta
+#from datetime import datetime, timedelta
+
 
 class DataGenerator:
 
@@ -88,4 +89,11 @@ class DataGenerator:
             'genre_id': random.randint(1, 10),
             'created_at': DataGenerator.generate_random_datetime()
         }
+
+    @staticmethod
+    def generate_random_full_name():
+        return f"{faker.first_name()} {faker.last_name()}"
+
+
+
 
