@@ -20,7 +20,7 @@ def test_register_by_ui():
 
         register_page.assert_was_redirect_to_login_page()
 
-        register_page.assert_allert_was_pop_up()
+        register_page.assert_alert_was_pop_up()
 
         time.sleep(5)
 

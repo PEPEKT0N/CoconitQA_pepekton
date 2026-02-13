@@ -1,6 +1,6 @@
 from playwright.sync_api import Page
 import allure
-import random
+
 
 class PageAction:
     def __init__(self, page: Page):
@@ -71,88 +71,3 @@ class BasePage(PageAction):
     def go_to_all_movies(self):
         self.click_element(self.all_movies_button)
         self.wait_redirect_for_url(f"{self.home_url}movies")
-
-
-class CinescopeRegisterPage(BasePage):
-    def __init__(self, page: Page):
-        super().__init__(page)
-        self.url = f"{self.home_url}register"
-
-        self.full_name_input = "input[name='fullName']"
-        self.email_input = "input[name='email']"
-        self.password_input = "input[name='password']"
-        self.repeat_password_input = "input[name='passwordRepeat']"
-
-        self.register_button = "button[type='submit']"
-        self.sign_button = "a[href='/login' and text()='Войти']"
-
-    def open(self):
-        self.open_url(self.url)
-
-    def register(self, full_name: str, email: str, password: str, confirm_password: str):
-        self.enter_text_to_element(self.full_name_input, full_name)
-        self.enter_text_to_element(self.email_input, email)
-        self.enter_text_to_element(self.password_input, password)
-        self.enter_text_to_element(self.repeat_password_input, confirm_password)
-
-        self.click_element(self.register_button)
-
-    def assert_was_redirect_to_login_page(self):
-        self.wait_redirect_for_url(f"{self.home_url}login")
-
-    def assert_allert_was_pop_up(self):
-        self.check_pop_p_element_with_text("Подтвердите свою почту")
-
-class CinescopeLoginPage(BasePage):
-    def __init__(self, page: Page):
-        super().__init__(page)
-        self.url = f"{self.home_url}login"
-
-        self.email_input = "input[name='email']"
-        self.password_input = "input[name='password']"
-
-        self.login_button = "button[type='submit']"
-        self.register_button = "a[href='/register' and text()='Зарегистрироваться']"
-
-        self.witcher_movie = "button[text='Подробнее']"
-
-    def open(self):
-        self.open_url(self.url)
-
-    def login(self, email: str, password: str):
-        self.enter_text_to_element(self.password_input, password)
-        self.enter_text_to_element(self.email_input, email)
-        self.click_element(self.login_button)
-
-    def assert_was_redirect_to_home_page(self):
-        self.wait_redirect_for_url(self.home_url)
-
-    def assert_allert_was_pop_up(self):
-        self.check_pop_p_element_with_text("Вы вошли в аккаунт")
-
-class WitcherInfo(BasePage):
-    def __init__(self, page: Page):
-        super().__init__(page)
-        self.url = f"{self.home_url}movies/2450"
-
-        self.login_button = "button[text()='Войти']"
-        self.review_text_are = "textarea[name='text']"
-        self.rate_button = "xpath=//button[@type='button' and @role='combobox']"
-        self.submit_button = "button[type='submit']"
-
-    def open(self):
-        self.open_url(self.url)
-
-    def set_rating(self, text_rating: str):
-        rate = str(random.randint(1, 5))
-
-        self.enter_text_to_element(self.review_text_are, text_rating)
-        self.click_element(self.rate_button)
-        self.page.get_by_role("option", name=rate).click()
-        self.click_element(self.submit_button)
-
-    def assert_allert_was_pop_up(self):
-        self.check_pop_p_element_with_text("Отзыв успешно создан")
-
-
-

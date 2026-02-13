@@ -1,11 +1,10 @@
 from faker import Faker
 import requests
+import pytest
 from playwright.sync_api import sync_playwright
 
-from constants.constants import BASE_URL, HEADERS, REGISTER_ENDPOINT, LOGIN_ENDPOINT
-import pytest
-
-from model.page_objects_models import CinescopeLoginPage
+from constants.constants import BASE_URL, REGISTER_ENDPOINT, HEADLESS
+from model.cinescope_login_page import CinescopeLoginPage
 from utils.data_generator import DataGenerator
 from custom_requester.custom_requester import CustomRequester
 from api.api_manager import ApiManager
@@ -208,13 +207,13 @@ def review_movie():
 @pytest.fixture
 def page():
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=False)
+        browser = playwright.chromium.launch(headless=HEADLESS)
         page = browser.new_page()
         yield page
         browser.close()
 
 @pytest.fixture
-def autorized_page(page, login_data_user):
+def authorized_page(page, login_data_user):
     login_page = CinescopeLoginPage(page)
     login_page.open()
     login_page.login(login_data_user["email"], login_data_user["password"])

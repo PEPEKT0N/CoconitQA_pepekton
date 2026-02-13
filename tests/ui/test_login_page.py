@@ -16,7 +16,7 @@ def test_login_by_ui(registered_user):
 
         login_page.assert_was_redirect_to_home_page()
         login_page.make_screenshot_and_attach_to_allure()
-        login_page.assert_allert_was_pop_up()
+        login_page.assert_alert_was_pop_up()
 
         time.sleep(5)
 
